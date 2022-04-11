@@ -7,4 +7,8 @@
     <string name="bottom_left">Bottom Left</string>
     <string name="bottom_right">Bottom Right</string>
     <string name="empty"></string>
+    <string name="verify">Verify</string>
+    <string name="cancel">Cancel</string>
+    <string name="result_ok">Result OK</string>
+    <string name="result_cancel">Result Cancelled</string>
 </resources>
