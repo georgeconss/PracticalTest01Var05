@@ -3,14 +3,21 @@ package ro.pub.cs.systems.eim.practicaltest01var05;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.Toast;
+
+import ro.pub.cs.systems.eim.practicaltest01var05.general.Constants;
+import ro.pub.cs.systems.eim.practicaltest01var05.service.PracticalTest01Var05Service;
 
 public class PracticalTest01Var05MainActivity extends AppCompatActivity {
 
@@ -32,6 +39,19 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
     final private static String INTENT_EXTRA = "INTENT_EXTRA";
     final private static int REQUEST_CODE = 2022;
 
+    private boolean isServiceStarted = false;
+
+    private MessageBroadcastReceiver messageBroadcastReceiver;
+    private class MessageBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(Constants.BROADCAST_RECEIVER_TAG, intent.getStringExtra(Constants.BROADCAST_RECEIVER_EXTRA));
+        }
+    }
+
+    IntentFilter intentFilter = new IntentFilter();
+
+
     private class ButtonClickListener implements View.OnClickListener {
 
         @Override
@@ -47,6 +67,16 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
                 Intent intent = new Intent("ro.pub.cs.systems.eim.practicaltest01var05.intent.action.PracticalTest01Var05SecondaryActivity");
                 intent.putExtra(INTENT_EXTRA, editText.getText().toString());
                 startActivityForResult(intent, REQUEST_CODE);
+            }
+
+            if (!isServiceStarted) {
+                if (numPresses >= Constants.PRESSES_THRESHOLD) {
+                    isServiceStarted = true;
+                    Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05Service.class);
+                    intent.putExtra(Constants.INTENT_STRING, editText.getText().toString());
+                    intent.putExtra(Constants.INTENT_INT, numPresses);
+                    startService(intent);
+                }
             }
         }
     }
@@ -71,6 +101,8 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
         gridLayout = findViewById(R.id.grid);
 
         setAllButtonListener(gridLayout);
+        messageBroadcastReceiver = new MessageBroadcastReceiver();
+        intentFilter.addAction(Constants.SERVICE_ACTION);
     }
 
     @Override
@@ -105,6 +137,20 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
         }
         Toast.makeText(this, result, Toast.LENGTH_LONG).show();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(messageBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(messageBroadcastReceiver);
+        super.onPause();
+    }
+
+
 
     public void setAllButtonListener(ViewGroup viewGroup) {
         int noChildren = viewGroup.getChildCount();
